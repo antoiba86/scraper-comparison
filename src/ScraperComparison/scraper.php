@@ -12,9 +12,9 @@ class Scraper {
 	//This variables are for scanning purpose, if you find this variable, you don't have to scan the node anymore
 	protected $type_not_more_scanning = [];
 	protected $value_not_more_scanning = [];
+	protected $same_structure = true;
 
     function verify_dom_structure($node1, $node2, $uniques_element = null, $limit = null) {
-	    $this->same_structure;
 	    $repeated_structure_found = false;
 	    //We verify if nodes has attributes
 	    if ($node1->hasAttributes() && $node2->hasAttributes()) {
@@ -29,15 +29,15 @@ class Scraper {
 	                $value_attr_node2 = $node2_attr[$i]->nodeValue;
 
 	                if ($name_attr_node1 != $name_attr_node2) {
-	                    $same_structure = false;
+	                    $this->same_structure = false;
 	                    break;
 	                }
 	                if ($value_attr_node1 != $value_attr_node2) {
-	                    $same_structure = false;
+	                    $this->same_structure = false;
 	                    break;
 	                }
 
-	                if ($same_structure) {
+	                if ($this->same_structure) {
 	                	//We verify if the node is repeated with type_unique_elements
 	                	//If it is a repetitive structure, we don't verify if the node is the same more than once
 	                	$unique_structure_found = $this->node_repeated($name_attr_node1, $value_attr_node1);
@@ -56,18 +56,18 @@ class Scraper {
 	            }
 	        }
 	        else if ($node1_attr->length != $node2_attr->length) {
-	        	$same_structure = false;
+	        	$this->same_structure = false;
 	        }
 	        
 	    }
 	    else if ($node1->hasAttributes() && !$node2->hasAttributes()) {
-	        $same_structure = false;
+	        $this->same_structure = false;
 	    }
 	    else if (!$node1->hasAttributes() && $node2->hasAttributes()) {
-	        $same_structure = false;
+	        $this->same_structure = false;
 	    }
 
-	    if ($same_structure && !$repeated_structure_found)  {
+	    if ($this->same_structure && !$repeated_structure_found)  {
 	        if ($node1->hasChildNodes() && $node2->hasChildNodes()) {
 	            $limit = 0;
 	            $children_node1 = $node1->childNodes;
@@ -82,17 +82,17 @@ class Scraper {
 	            $limit_children = $children_node1->length;
 	            //}
 	            for ($i = 0; $i < $limit_children; $i++) {
-	                if (!$same_structure) {
+	                if (!$this->same_structure) {
 	                    break;
 	                }
 	                verify_dom_structure($children_node1[$i], $children_node2[$i], $uniques_element, $limit);
 	            }
 	        }
 	        else if (!$node1->hasChildNodes() && $node2->hasChildNodes()) {
-	        	$same_structure = false;
+	        	$this->same_structure = false;
 	        }
 	        else if ($node1->hasChildNodes() && !$node2->hasChildNodes()) {
-	        	$same_structure = false;
+	        	$this->same_structure = false;
 	        }
 	    }
 	    //return $same_structure;
@@ -110,20 +110,12 @@ class Scraper {
 			}
 		}
 		return $unique_structure_found;
-
 	}
 
 	/**
 	Function to delete unnecessary elements before we compared the two dom elements
 	*/
 	function clean_dom($dom, $elements_to_search, $elements_to_clean) {
-	//https://stackoverflow.com/questions/35534654/php-domdocument-delete-elements
-		//https://duckduckgo.com/?q=delete+attributes+dom+element+php+dom&t=canonical&ia=qa	
-
-		//$dom = new DOMDocument;                 // init new DOMDocument
-		//$dom->loadHTML($html);                  // load HTML into it
-		//$xpath = new DOMXPath($dom);            // create a new XPath
-		//$nodes = $xpath->query('//*[@style]');  // Find elements with a style attribute
 		foreach ($elements_to_search as $element) {
 			$nodes = $this->getElementsToClean($dom, $element["typeSearch"], $element["tag"], $element["value"]);
 			foreach ($nodes as $node) {              // Iterate over found elements
@@ -135,32 +127,18 @@ class Scraper {
 			    
 			}
 		}
-		
-		//echo $dom->saveHTML();                  // output cleaned HTML
-		//If you want to remove all possible attributes from all possible tags, do
-
-		/*$dom = new DOMDocument;
-		$dom->loadHTML($html);
-		$xpath = new DOMXPath($dom);
-		$nodes = $xpath->query('//@*');
-		foreach ($nodes as $node) {
-		    $node->parentNode->removeAttribute($node->nodeName);
-		}
-		echo $dom->saveHTML();*/
+		return $dom;
 	}
 
-	public function getElementsToClean($dom, $typeSearch, $tag, $value = null) {
-
+	
+	public function get_elements_to_clean($dom, $typeSearch, $tag, $value = null) {
 		$list = array();
-			
 		$attributeTrimmed = trim($attribute);
 		$tagTrimmed = trim($tag);
 	    libxml_use_internal_errors(true);
-		
 		if ($typeSearch == "attribute") {
 			$xpath = new DOMXPath($dom);            // create a new XPath
 			$elements = $xpath->query("//*[contains(concat(' ', normalize-space(@$tagTrimmed), ' '), ' $value ')]");
-			//$elements = $xpath->query('//*[@style]');  // Find elements with a style attribute
 		}
 		else if ($typeSearch == "element") {
 			$elements = $dom->getElementsByTagName($tagTrimmed);
@@ -169,8 +147,29 @@ class Scraper {
 	}
 
 	public function cleanElement() {
-
+		
 	}
 
-	
+	public function tryVerifyDom() {
+		$dom = new DOMDocument();
+		$dom->formatOutput = true;
+		$same_structure = true;
+		$dom->loadHTMLFile("test.html");
+		$content = $dom->getElementById("portada");
+		//$content->saveHTMLFile("test1.html");
+		$dom2 = new DOMDocument();
+		$dom2->loadHTMLFile("test2.html");
+		$content2 = $dom2->getElementById("portada");
+		//$web2 = $content2->saveHTML(); 
+		//echo $web2;
+		verify_dom_structure($content, $content2);
+		if ($this->same_structure) {
+			echo "Son iguales";
+		}
+		else {
+			echo "No son iguales";
+		}
+	}
+
+
 }
