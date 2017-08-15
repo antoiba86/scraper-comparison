@@ -5,44 +5,44 @@ namespace ScraperComparison;
 class Scraper {
 
 	//These are three variables 
-	protected $type_unique_element = [];
-	protected $value_unique_element = [];
-	protected $verify_unique_element = [];
-	protected $count_unique_element = [];
+	protected $typeUniqueElement = [];
+	protected $valueUniqueElement = [];
+	protected $verifyUniqueElement = [];
+	protected $countUniqueElement = [];
 	//This variables are for scanning purpose, if you find this variable, you don't have to scan the node anymore
-	protected $type_not_more_scanning = [];
-	protected $value_not_more_scanning = [];
-	protected $same_structure = true;
+	protected $typeNotMoreScanning = [];
+	protected $valueNotMoreScanning = [];
+	protected $sameStructure = true;
 
-    function verify_dom_structure($node1, $node2, $uniques_element = null, $limit = null) {
-	    $repeated_structure_found = false;
+    function verifyDomStructure($node1, $node2, $uniques_element = null, $limit = null) {
+	    $repeatedStructureFound = false;
 	    //We verify if nodes has attributes
 	    if ($node1->hasAttributes() && $node2->hasAttributes()) {
-	        $node1_attr = $node1->attributes;
-	        $node2_attr = $node2->attributes;
+	        $nodeAttr1 = $node1->attributes;
+	        $nodeAttr2 = $node2->attributes;
 	        //If there are attr, we have a foreach to verify if every attr is the same
-	        if ($node1_attr->length == $node2_attr->length) {
-	            for ($i = 0; $i < $node1_attr->length; $i++) {
-	                $name_attr_node1 = $node1_attr[$i]->nodeName;
-	                $name_attr_node2 = $node2_attr[$i]->nodeName;
-	                $value_attr_node1 = $node1_attr[$i]->nodeValue;
-	                $value_attr_node2 = $node2_attr[$i]->nodeValue;
+	        if ($nodeAttr1->length == $nodeAttr2->length) {
+	            for ($i = 0; $i < $nodeAttr1->length; $i++) {
+	                $nameAttrNode1 = $nodeAttr1[$i]->nodeName;
+	                $nameAttrNode2 = $nodeAttr2[$i]->nodeName;
+	                $valueAttrNode1 = $nodeAttr1[$i]->nodeValue;
+	                $valueAttrNode2 = $nodeAttr2[$i]->nodeValue;
 
-	                if ($name_attr_node1 != $name_attr_node2) {
-	                    $this->same_structure = false;
+	                if ($nameAttrNode1 != $nameAttrNode2) {
+	                    $this->sameStructure = false;
 	                    break;
 	                }
-	                if ($value_attr_node1 != $value_attr_node2) {
-	                    $this->same_structure = false;
+	                if ($valueAttrNode1 != $valueAttrNode2) {
+	                    $this->sameStructure = false;
 	                    break;
 	                }
 
-	                if ($this->same_structure) {
-	                	//We verify if the node is repeated with type_unique_elements
+	                if ($this->sameStructure) {
+	                	//We verify if the node is repeated with typeUniqueElements
 	                	//If it is a repetitive structure, we don't verify if the node is the same more than once
-	                	$unique_structure_found = $this->node_repeated($name_attr_node1, $value_attr_node1);
-	                	if (!empty($unique_structure_found) && $unique_structure_found > 1) {
-	                		$repeated_structure_found = true;
+	                	$uniqueStructureFound = $this->nodeRepeated($nameAttrNode1, $valueAttrNode1);
+	                	if (!empty($uniqueStructureFound) && $uniqueStructureFound > 1) {
+	                		$repeatedStructureFound = true;
 	                		break;
 	                	}
 	                	
@@ -50,28 +50,28 @@ class Scraper {
 	                /*$attributes_values_node1 = $node1->getAttribute($name_node1);
 	                $attributes_values_node2 = $node3->getAttribute($name_node2);
 	                if ($attributes_values_node1 != $attributes_values_node2) {
-	                    $same_structure = false;
+	                    $sameStructure = false;
 	                    break;
 	                }*/
 	            }
 	        }
-	        else if ($node1_attr->length != $node2_attr->length) {
-	        	$this->same_structure = false;
+	        else if ($nodeAttr1->length != $nodeAttr2->length) {
+	        	$this->sameStructure = false;
 	        }
 	        
 	    }
 	    else if ($node1->hasAttributes() && !$node2->hasAttributes()) {
-	        $this->same_structure = false;
+	        $this->sameStructure = false;
 	    }
 	    else if (!$node1->hasAttributes() && $node2->hasAttributes()) {
-	        $this->same_structure = false;
+	        $this->sameStructure = false;
 	    }
 
-	    if ($this->same_structure && !$repeated_structure_found)  {
+	    if ($this->sameStructure && !$repeatedStructureFound)  {
 	        if ($node1->hasChildNodes() && $node2->hasChildNodes()) {
 	            $limit = 0;
-	            $children_node1 = $node1->childNodes;
-	            $children_node2 = $node2->childNodes;
+	            $childrenNode1 = $node1->childNodes;
+	            $childrenNode2 = $node2->childNodes;
 	            /*$attr_node1 = $node1->getAttribute($uniques_element[0]);
 	            $attr_node2 = $node2->getAttribute($uniques_element[0]);
 	            $type_node1 = $node1->nodeName;
@@ -79,47 +79,53 @@ class Scraper {
 	                $limit_children = $limit;
 	            }
 	            else {*/
-	            $limit_children = $children_node1->length;
-	            //}
-	            for ($i = 0; $i < $limit_children; $i++) {
-	                if (!$this->same_structure) {
-	                    break;
-	                }
-	                verify_dom_structure($children_node1[$i], $children_node2[$i], $uniques_element, $limit);
+	            $limit_children = $childrenNode1->length;
+	            if ($childrenNode1->length == $childrenNode2->length) {
+	            	for ($i = 0; $i < $limit_children; $i++) {
+		                if (!$this->sameStructure) {
+		                    break;
+		                }
+		                verifyDomStructure($childrenNode1[$i], $childrenNode2[$i], $uniques_element, $limit);
+		            }
 	            }
+	            else {
+	            	$this->sameStructure = false;
+	            }
+	            //}
+	            
 	        }
 	        else if (!$node1->hasChildNodes() && $node2->hasChildNodes()) {
-	        	$this->same_structure = false;
+	        	$this->sameStructure = false;
 	        }
 	        else if ($node1->hasChildNodes() && !$node2->hasChildNodes()) {
-	        	$this->same_structure = false;
+	        	$this->sameStructure = false;
 	        }
 	    }
-	    //return $same_structure;
+	    //return $sameStructure;
 	}
 
-	function node_repeated ($name_attr_node1 , $value_attr_node1) {
-		$unique_structure_found = null;
-		for ($i = 0; $i < count($type_unique_element); $i++) {
-			if ($type_unique_element[$i] == $name_attr_node1) {
-				if ($value_unique_element[$i] == $value_attr_node1) {
-					$count_unique_element[$i]++;
-					$unique_structure_found = $count_unique_element[$i];
+	function nodeRepeated ($nameAttrNode1 , $valueAttrNode1) {
+		$uniqueStructureFound = null;
+		for ($i = 0; $i < count($typeUniqueElement); $i++) {
+			if ($typeUniqueElement[$i] == $nameAttrNode1) {
+				if ($valueUniqueElement[$i] == $valueAttrNode1) {
+					$countUniqueElement[$i]++;
+					$uniqueStructureFound = $countUniqueElement[$i];
 					break;
 				}
 			}
 		}
-		return $unique_structure_found;
+		return $uniqueStructureFound;
 	}
 
 	/**
 	Function to delete unnecessary elements before we compared the two dom elements
 	*/
-	function clean_dom($dom, $elements_to_search, $elements_to_clean) {
-		foreach ($elements_to_search as $element) {
+	function cleanAttributes($dom, $elementsToSearch, $attributesToClean) {
+		foreach ($elementsToSearch as $element) {
 			$nodes = $this->getElementsToClean($dom, $element["typeSearch"], $element["tag"], $element["value"]);
 			foreach ($nodes as $node) {              // Iterate over found elements
-				foreach ($attributes_to_clean as $attr) {
+				foreach ($attributesToClean as $attr) {
 					if ($node->hasAttribute($attr)) {
 						$node->removeAttribute($attr);    // Remove style attribute
 					}
@@ -131,7 +137,7 @@ class Scraper {
 	}
 
 	
-	public function get_elements_to_clean($dom, $typeSearch, $tag, $value = null) {
+	public function getElementsToClean($dom, $typeSearch, $type, $value = null) {
 		$list = array();
 		$attributeTrimmed = trim($attribute);
 		$tagTrimmed = trim($tag);
@@ -140,20 +146,27 @@ class Scraper {
 			$xpath = new DOMXPath($dom);            // create a new XPath
 			$elements = $xpath->query("//*[contains(concat(' ', normalize-space(@$tagTrimmed), ' '), ' $value ')]");
 		}
-		else if ($typeSearch == "element") {
+		else if ($typeSearch == "tag") {
 			$elements = $dom->getElementsByTagName($tagTrimmed);
 		}
+
 		return $elements;
 	}
 
-	public function cleanElement() {
-		
+	public function cleanElements($dom, $elementsToSearch, $elementsToClean) {
+		foreach ($elementsToSearch as $element) {
+			$nodes = $this->getElementsToClean($dom, $element["typeSearch"], $element["tag"], $element["value"]);
+			foreach ($nodes as $node) {              // Iterate over found elements
+				$node->parentNode->removeChild($node);
+			}
+		}
+		return $dom;
 	}
 
 	public function tryVerifyDom() {
 		$dom = new DOMDocument();
 		$dom->formatOutput = true;
-		$same_structure = true;
+		$sameStructure = true;
 		$dom->loadHTMLFile("test.html");
 		$content = $dom->getElementById("portada");
 		//$content->saveHTMLFile("test1.html");
@@ -162,8 +175,8 @@ class Scraper {
 		$content2 = $dom2->getElementById("portada");
 		//$web2 = $content2->saveHTML(); 
 		//echo $web2;
-		verify_dom_structure($content, $content2);
-		if ($this->same_structure) {
+		verifyDomStructure($content, $content2);
+		if ($this->sameStructure) {
 			echo "Son iguales";
 		}
 		else {
